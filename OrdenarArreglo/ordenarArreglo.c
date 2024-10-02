@@ -1,11 +1,29 @@
- #include <stdio.h>
+#include <stdio.h>
+#include <stdlib.h>
 
 // Prototipo de la función para ordenar el arreglo
 void selectionSort(int *arr, int size);
 
 int main() {
-    int arr[] = {64, 25, 12, 22, 11};
-    int size = sizeof(arr) / sizeof(arr[0]);
+    int size;
+
+    // Solicitar al usuario el tamaño del arreglo
+    printf("Ingrese el tamaño del arreglo: ");
+    scanf("%d", &size);
+
+    // Reservar memoria para el arreglo
+    int *arr = (int *)malloc(size * sizeof(int));
+    if (arr == NULL) {
+        printf("Error al reservar memoria.\n");
+        return 1; // Salir si no se pudo reservar memoria
+    }
+
+    // Solicitar al usuario que ingrese los elementos del arreglo
+    printf("Ingrese los elementos del arreglo:\n");
+    for (int i = 0; i < size; i++) {
+        printf("Elemento %d: ", i + 1);
+        scanf("%d", arr + i); // Usando apuntadores para asignar valores
+    }
 
     printf("Arreglo original:\n");
     for (int i = 0; i < size; i++) {
@@ -19,6 +37,9 @@ int main() {
         printf("%d ", *(arr + i));
     }
 
+    // Liberar la memoria reservada
+    free(arr);
+    
     return 0;
 }
 
@@ -40,4 +61,3 @@ void selectionSort(int *arr, int size) {
         *(arr + i) = temp;
     }
 }
-
