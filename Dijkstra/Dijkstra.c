@@ -211,4 +211,29 @@ void dijkstra(Graph* graph, int src) {
         // Extrae el vértice con la distancia mínima
         MinHeapNode* minHeapNode = extractMin(minHeap);
         int u = minHeapNode->v;
+
+        // Procesa todos los vecinos de u
+        AdjListNode* pCrawl = graph->array[u].head;
+        while (pCrawl != NULL) {
+            int v = pCrawl->dest;
+
+            // Si la distancia más corta a v no está finalizada y puede ser mejorada
+            if (isInMinHeap(minHeap, v) && dist[u] != INT_MAX && 
+                pCrawl->weight + dist[u] < dist[v]) {
+                dist[v] = dist[u] + pCrawl->weight;
+
+                // Actualiza la distancia en el heap
+                decreaseKey(minHeap, v, dist[v]);
+            }
+            pCrawl = pCrawl->next;
+        }
     }
+
+    // Imprime las distancias más cortas
+    printArr(dist, V);
+}
+
+// Función principal
+int main() {
+    int V = 9;
+    
