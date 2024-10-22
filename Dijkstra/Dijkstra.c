@@ -3,237 +3,73 @@
 #include <limits.h>
 #include <stdbool.h>
 
-// Definición de la estructura para representar un nodo en la lista de adyacencia
-typedef struct AdjListNode {
-    int dest;
-    int weight;
-    struct AdjListNode* next;
-} AdjListNode;
+// Estructuras de Nodo, Lista de Adyacencia, Grafo, Nodo MinHeap y MinHeap
+typedef struct AdjListNode { int dest, weight; struct AdjListNode* next; } AdjListNode;
+typedef struct { AdjListNode* head; } AdjList;
+typedef struct { int V; AdjList* array; } Graph;
+typedef struct { int v, dist; } MinHeapNode;
+typedef struct { int size, capacity, *pos; MinHeapNode **array; } MinHeap;
 
-// Estructura para representar una lista de adyacencia
-typedef struct AdjList {
-    AdjListNode* head;
-} AdjList;
-
-// Estructura para representar un grafo
-typedef struct Graph {
-    int V;
-    AdjList* array;
-} Graph;
-
-// Estructura para representar un nodo en la cola de prioridad (min heap)
-typedef struct MinHeapNode {
-    int v;
-    int dist;
-} MinHeapNode;
-
-// Estructura para representar una cola de prioridad (min heap)
-typedef struct MinHeap {
-    int size;
-    int capacity;
-    int *pos;
-    MinHeapNode **array;
-} MinHeap;
-
-// Crea un nuevo nodo en la lista de adyacencia
-AdjListNode* newAdjListNode(int dest, int weight) {
-    AdjListNode* newNode = (AdjListNode*) malloc(sizeof(AdjListNode));
-    newNode->dest = dest;
-    newNode->weight = weight;
-    newNode->next = NULL;
-    return newNode;
+// Funciones de MinHeap (Creación, Inserción y Extracción)
+MinHeapNode* newMinHeapNode(int v, int dist) { MinHeapNode* n = (MinHeapNode*) malloc(sizeof(MinHeapNode)); n->v = v; n->dist = dist; return n; }
+MinHeap* createMinHeap(int capacity) { MinHeap* heap = (MinHeap*) malloc(sizeof(MinHeap)); heap->pos = malloc(capacity * sizeof(int)); heap->size = 0; heap->capacity = capacity; heap->array = malloc(capacity * sizeof(MinHeapNode*)); return heap; }
+void swapMinHeapNode(MinHeapNode** a, MinHeapNode** b) { MinHeapNode* t = *a; *a = *b; *b = t; }
+void minHeapify(MinHeap* heap, int idx) {
+    int smallest = idx, left = 2 * idx + 1, right = 2 * idx + 2;
+    if (left < heap->size && heap->array[left]->dist < heap->array[smallest]->dist) smallest = left;
+    if (right < heap->size && heap->array[right]->dist < heap->array[smallest]->dist) smallest = right;
+    if (smallest != idx) { swapMinHeapNode(&heap->array[smallest], &heap->array[idx]); minHeapify(heap, smallest); }
 }
-
-// Crea un grafo con V vértices
-Graph* createGraph(int V) {
-    Graph* graph = (Graph*) malloc(sizeof(Graph));
-    graph->V = V;
-
-    // Crear una lista de adyacencia para cada vértice
-    graph->array = (AdjList*) malloc(V * sizeof(AdjList));
-
-    // Inicializar la lista de adyacencia para cada vértice
-    for (int i = 0; i < V; i++)
-        graph->array[i].head = NULL;
-
-    return graph;
+MinHeapNode* extractMin(MinHeap* heap) { 
+    if (heap->size == 0) return NULL; 
+    MinHeapNode* root = heap->array[0], *lastNode = heap->array[--heap->size]; 
+    heap->array[0] = lastNode; minHeapify(heap, 0); return root; 
 }
-
-// Agrega un borde al grafo dirigido
-void addEdge(Graph* graph, int src, int dest, int weight) {
-    // Agrega un borde de src a dest. Un nuevo nodo se agrega a la lista de adyacencia de src.
-    AdjListNode* newNode = newAdjListNode(dest, weight);
-    newNode->next = graph->array[src].head;
-    graph->array[src].head = newNode;
-
-    // Como el grafo es no dirigido, también agregamos un borde de dest a src
-    newNode = newAdjListNode(src, weight);
-    newNode->next = graph->array[dest].head;
-    graph->array[dest].head = newNode;
-}
-
-// Crea un nodo de min heap
-MinHeapNode* newMinHeapNode(int v, int dist) {
-    MinHeapNode* minHeapNode = (MinHeapNode*) malloc(sizeof(MinHeapNode));
-    minHeapNode->v = v;
-    minHeapNode->dist = dist;
-    return minHeapNode;
-}
-
-// Crea una cola de prioridad (min heap)
-MinHeap* createMinHeap(int capacity) {
-    MinHeap* minHeap = (MinHeap*) malloc(sizeof(MinHeap));
-    minHeap->pos = (int*) malloc(capacity * sizeof(int));
-    minHeap->size = 0;
-    minHeap->capacity = capacity;
-    minHeap->array = (MinHeapNode**) malloc(capacity * sizeof(MinHeapNode*));
-    return minHeap;
-}
-
-// Intercambia dos nodos de min heap
-void swapMinHeapNode(MinHeapNode** a, MinHeapNode** b) {
-    MinHeapNode* t = *a;
-    *a = *b;
-    *b = t;
-}
-
-// Función para hacer un heapify (ajustar el heap)
-void minHeapify(MinHeap* minHeap, int idx) {
-    int smallest = idx;
-    int left = 2 * idx + 1;
-    int right = 2 * idx + 2;
-
-    if (left < minHeap->size && minHeap->array[left]->dist < minHeap->array[smallest]->dist)
-        smallest = left;
-
-    if (right < minHeap->size && minHeap->array[right]->dist < minHeap->array[smallest]->dist)
-        smallest = right;
-
-    if (smallest != idx) {
-        MinHeapNode* smallestNode = minHeap->array[smallest];
-        MinHeapNode* idxNode = minHeap->array[idx];
-
-        // Intercambia posiciones
-        minHeap->pos[smallestNode->v] = idx;
-        minHeap->pos[idxNode->v] = smallest;
-
-        // Intercambia nodos
-        swapMinHeapNode(&minHeap->array[smallest], &minHeap->array[idx]);
-
-        minHeapify(minHeap, smallest);
+void decreaseKey(MinHeap* heap, int v, int dist) {
+    int i = heap->pos[v]; heap->array[i]->dist = dist;
+    while (i && heap->array[i]->dist < heap->array[(i - 1) / 2]->dist) {
+        heap->pos[heap->array[i]->v] = (i - 1) / 2; heap->pos[heap->array[(i - 1) / 2]->v] = i;
+        swapMinHeapNode(&heap->array[i], &heap->array[(i - 1) / 2]); i = (i - 1) / 2;
     }
 }
+bool isInMinHeap(MinHeap* heap, int v) { return heap->pos[v] < heap->size; }
 
-// Función para verificar si el heap está vacío
-int isEmpty(MinHeap* minHeap) {
-    return minHeap->size == 0;
+// Funciones de Grafo (Creación y Agregar Arista)
+AdjListNode* newAdjListNode(int dest, int weight) { AdjListNode* node = malloc(sizeof(AdjListNode)); node->dest = dest; node->weight = weight; node->next = NULL; return node; }
+Graph* createGraph(int V) { Graph* graph = (Graph*) malloc(sizeof(Graph)); graph->V = V; graph->array = malloc(V * sizeof(AdjList)); for (int i = 0; i < V; i++) graph->array[i].head = NULL; return graph; }
+void addEdge(Graph* graph, int src, int dest, int weight) { 
+    AdjListNode* node = newAdjListNode(dest, weight); node->next = graph->array[src].head; graph->array[src].head = node;
+    node = newAdjListNode(src, weight); node->next = graph->array[dest].head; graph->array[dest].head = node;
 }
 
-// Extrae el vértice con la distancia mínima del heap
-MinHeapNode* extractMin(MinHeap* minHeap) {
-    if (isEmpty(minHeap))
-        return NULL;
-
-    // Guarda el nodo raíz
-    MinHeapNode* root = minHeap->array[0];
-
-    // Reemplaza la raíz con el último nodo
-    MinHeapNode* lastNode = minHeap->array[minHeap->size - 1];
-    minHeap->array[0] = lastNode;
-
-    // Actualiza la posición de los nodos
-    minHeap->pos[root->v] = minHeap->size - 1;
-    minHeap->pos[lastNode->v] = 0;
-
-    // Reduce el tamaño del heap y ajusta la estructura del heap
-    --minHeap->size;
-    minHeapify(minHeap, 0);
-
-    return root;
-}
-
-// Disminuye la distancia de un vértice v a una nueva distancia dist
-void decreaseKey(MinHeap* minHeap, int v, int dist) {
-    int i = minHeap->pos[v];
-    minHeap->array[i]->dist = dist;
-
-    // Ajusta la estructura del heap si es necesario
-    while (i && minHeap->array[i]->dist < minHeap->array[(i - 1) / 2]->dist) {
-        // Intercambia el nodo con su padre
-        minHeap->pos[minHeap->array[i]->v] = (i - 1) / 2;
-        minHeap->pos[minHeap->array[(i - 1) / 2]->v] = i;
-        swapMinHeapNode(&minHeap->array[i], &minHeap->array[(i - 1) / 2]);
-
-        i = (i - 1) / 2;
-    }
-}
-
-// Verifica si un vértice está en el heap
-bool isInMinHeap(MinHeap *minHeap, int v) {
-    if (minHeap->pos[v] < minHeap->size)
-        return true;
-    return false;
-}
-
-// Función que imprime las distancias más cortas
-void printArr(int dist[], int n) {
-    printf("Vértice   Distancia desde la fuente\n");
-    for (int i = 0; i < n; ++i)
-        printf("%d \t\t %d\n", i, dist[i]);
-}
-
-// Función principal que implementa el algoritmo de Dijkstra con min heap
+// Algoritmo de Dijkstra
 void dijkstra(Graph* graph, int src) {
-    int V = graph->V;
-    int dist[V]; // dist[i] guardará la distancia más corta desde src a i
-
-    // Cola de prioridad (min heap)
-    MinHeap* minHeap = createMinHeap(V);
-
-    // Inicializa el heap con todos los vértices y la distancia infinita
-    for (int v = 0; v < V; ++v) {
-        dist[v] = INT_MAX;
-        minHeap->array[v] = newMinHeapNode(v, dist[v]);
-        minHeap->pos[v] = v;
-    }
-
-    // Distancia del nodo fuente a sí mismo es siempre 0
-    minHeap->array[src] = newMinHeapNode(src, dist[src]);
-    minHeap->pos[src] = src;
-    dist[src] = 0;
-    decreaseKey(minHeap, src, dist[src]);
-
-    // Inicializa el tamaño del heap con todos los vértices
-    minHeap->size = V;
-
-    // Mientras el heap no esté vacío
-    while (!isEmpty(minHeap)) {
-        // Extrae el vértice con la distancia mínima
-        MinHeapNode* minHeapNode = extractMin(minHeap);
-        int u = minHeapNode->v;
-
-        // Procesa todos los vecinos de u
-        AdjListNode* pCrawl = graph->array[u].head;
-        while (pCrawl != NULL) {
+    int V = graph->V, dist[V]; MinHeap* heap = createMinHeap(V);
+    for (int v = 0; v < V; ++v) dist[v] = INT_MAX, heap->array[v] = newMinHeapNode(v, dist[v]), heap->pos[v] = v;
+    heap->array[src] = newMinHeapNode(src, dist[src] = 0); decreaseKey(heap, src, 0); heap->size = V;
+    
+    while (heap->size) {
+        int u = extractMin(heap)->v;
+        for (AdjListNode* pCrawl = graph->array[u].head; pCrawl; pCrawl = pCrawl->next) {
             int v = pCrawl->dest;
-
-            // Si la distancia más corta a v no está finalizada y puede ser mejorada
-            if (isInMinHeap(minHeap, v) && dist[u] != INT_MAX && 
-                pCrawl->weight + dist[u] < dist[v]) {
-                dist[v] = dist[u] + pCrawl->weight;
-
-                // Actualiza la distancia en el heap
-                decreaseKey(minHeap, v, dist[v]);
-            }
-            pCrawl = pCrawl->next;
+            if (isInMinHeap(heap, v) && dist[u] != INT_MAX && dist[u] + pCrawl->weight < dist[v])
+                dist[v] = dist[u] + pCrawl->weight, decreaseKey(heap, v, dist[v]);
         }
     }
 
-    // Imprime las distancias más cortas
-    printArr(dist, V);
+    printf("Vértice   Distancia desde la fuente\n");
+    for (int i = 0; i < V; ++i) printf("%d \t\t %d\n", i, dist[i]);
 }
 
 // Función principal
 int main() {
-    int V = 9;
-    
+    Graph* graph = createGraph(9);
+    addEdge(graph, 0, 1, 4); addEdge(graph, 0, 7, 8); addEdge(graph, 1, 2, 8);
+    addEdge(graph, 1, 7, 11); addEdge(graph, 2, 3, 7); addEdge(graph, 2, 8, 2);
+    addEdge(graph, 2, 5, 4); addEdge(graph, 3, 4, 9); addEdge(graph, 3, 5, 14);
+    addEdge(graph, 4, 5, 10); addEdge(graph, 5, 6, 2); addEdge(graph, 6, 7, 1);
+    addEdge(graph, 6, 8, 6); addEdge(graph, 7, 8, 7);
+
+    dijkstra(graph, 0);
+    return 0;
+}
