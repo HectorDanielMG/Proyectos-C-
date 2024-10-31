@@ -1,63 +1,63 @@
 #include <stdio.h>
-#include <stdlib.h>
 
-// Prototipo de la función para ordenar el arreglo
-void selectionSort(int *arr, int size);
+void ordenarAscendente(int arr[], int n);
+void ordenarDescendente(int arr[], int n);
+void imprimirArreglo(int arr[], int n);
 
 int main() {
-    int size;
+    int n;
 
-    // Solicitar al usuario el tamaño del arreglo
     printf("Ingrese el tamaño del arreglo: ");
-    scanf("%d", &size);
+    scanf("%d", &n);
 
-    // Reservar memoria para el arreglo
-    int *arr = (int *)malloc(size * sizeof(int));
-    if (arr == NULL) {
-        printf("Error al reservar memoria.\n");
-        return 1; // Salir si no se pudo reservar memoria
-    }
-
-    // Solicitar al usuario que ingrese los elementos del arreglo
+    int arr[n];
     printf("Ingrese los elementos del arreglo:\n");
-    for (int i = 0; i < size; i++) {
+    for (int i = 0; i < n; i++) {
         printf("Elemento %d: ", i + 1);
-        scanf("%d", arr + i); // Usando apuntadores para asignar valores
+        scanf("%d", &arr[i]);
     }
 
-    printf("Arreglo original:\n");
-    for (int i = 0; i < size; i++) {
-        printf("%d ", *(arr + i));
-    }
+    printf("\nArreglo original:\n");
+    imprimirArreglo(arr, n);
 
-    selectionSort(arr, size);
+    ordenarAscendente(arr, n);
+    printf("\nArreglo en orden ascendente:\n");
+    imprimirArreglo(arr, n);
 
-    printf("\nArreglo ordenado:\n");
-    for (int i = 0; i < size; i++) {
-        printf("%d ", *(arr + i));
-    }
+    ordenarDescendente(arr, n);
+    printf("\nArreglo en orden descendente:\n");
+    imprimirArreglo(arr, n);
 
-    // Liberar la memoria reservada
-    free(arr);
-    
     return 0;
 }
 
-// Función para realizar el ordenamiento por selección
-void selectionSort(int *arr, int size) {
-    for (int i = 0; i < size - 1; i++) {
-        int min_idx = i;
-
-        // Encontrar el valor mínimo en el arreglo no ordenado
-        for (int j = i + 1; j < size; j++) {
-            if (*(arr + j) < *(arr + min_idx)) {
-                min_idx = j;
+void ordenarAscendente(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] > arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
             }
         }
-
-        // Intercambiar el valor mínimo encontrado con el primer elemento
-        int temp = *(arr + min_idx);
-        *(arr + min_idx) = *(arr + i);
-        *(arr + i) = temp;
     }
+}
+
+void ordenarDescendente(int arr[], int n) {
+    for (int i = 0; i < n - 1; i++) {
+        for (int j = 0; j < n - i - 1; j++) {
+            if (arr[j] < arr[j + 1]) {
+                int temp = arr[j];
+                arr[j] = arr[j + 1];
+                arr[j + 1] = temp;
+            }
+        }
+    }
+}
+
+void imprimirArreglo(int arr[], int n) {
+    for (int i = 0; i < n; i++) {
+        printf("%d ", arr[i]);
+    }
+    printf("\n");
 }
