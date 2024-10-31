@@ -1,56 +1,78 @@
- 
 using System;
 
-class Program
+namespace CalculadoraApp
 {
-    static void Main()
+    class Calculadora
     {
-        double num1, num2, resultado;
-        string operacion;
-
-        Console.WriteLine("Calculadora básica en C#");
-
-        Console.Write("Ingresa el primer número: ");
-        num1 = Convert.ToDouble(Console.ReadLine());
-
-        Console.Write("Ingresa el segundo número: ");
-        num2 = Convert.ToDouble(Console.ReadLine());
-
-        Console.WriteLine("Selecciona la operación: + (suma), - (resta), * (multiplicación), / (división)");
-        operacion = Console.ReadLine();
-
-        switch (operacion)
+        static void Main(string[] args)
         {
-            case "+":
-                resultado = num1 + num2;
-                Console.WriteLine($"Resultado: {num1} + {num2} = {resultado}");
-                break;
+            while (true)
+            {
+                Console.Clear();
+                Console.WriteLine("Calculadora en C#");
+                Console.WriteLine("Operaciones disponibles:");
+                Console.WriteLine("1. Sumar (+)");
+                Console.WriteLine("2. Restar (-)");
+                Console.WriteLine("3. Multiplicar (*)");
+                Console.WriteLine("4. Dividir (/)");
+                Console.WriteLine("5. Potencia (^)");
+                Console.WriteLine("6. Salir");
+                
+                Console.Write("Seleccione una operación: ");
+                string operacion = Console.ReadLine();
 
-            case "-":
-                resultado = num1 - num2;
-                Console.WriteLine($"Resultado: {num1} - {num2} = {resultado}");
-                break;
+                if (operacion == "6") break;
 
-            case "*":
-                resultado = num1 * num2;
-                Console.WriteLine($"Resultado: {num1} * {num2} = {resultado}");
-                break;
+                Console.Write("Ingrese el primer número: ");
+                double num1 = Convert.ToDouble(Console.ReadLine());
 
-            case "/":
-                if (num2 != 0)
+                Console.Write("Ingrese el segundo número: ");
+                double num2 = Convert.ToDouble(Console.ReadLine());
+
+                double resultado = 0;
+
+                switch (operacion)
                 {
-                    resultado = num1 / num2;
-                    Console.WriteLine($"Resultado: {num1} / {num2} = {resultado}");
+                    case "+":
+                        resultado = Sumar(num1, num2);
+                        break;
+                    case "-":
+                        resultado = Restar(num1, num2);
+                        break;
+                    case "*":
+                        resultado = Multiplicar(num1, num2);
+                        break;
+                    case "/":
+                        resultado = Dividir(num1, num2);
+                        break;
+                    case "^":
+                        resultado = Potencia(num1, num2);
+                        break;
+                    default:
+                        Console.WriteLine("Operación no válida.");
+                        continue;
                 }
-                else
-                {
-                    Console.WriteLine("Error: No se puede dividir por 0.");
-                }
-                break;
 
-            default:
-                Console.WriteLine("Operación no válida.");
-                break;
+                Console.WriteLine($"Resultado: {resultado}");
+                Console.WriteLine("Presione cualquier tecla para continuar...");
+                Console.ReadKey();
+            }
         }
+
+        static double Sumar(double a, double b) => a + b;
+        static double Restar(double a, double b) => a - b;
+        static double Multiplicar(double a, double b) => a * b;
+        
+        static double Dividir(double a, double b)
+        {
+            if (b == 0)
+            {
+                Console.WriteLine("Error: División por cero no permitida.");
+                return double.NaN;
+            }
+            return a / b;
+        }
+        
+        static double Potencia(double a, double b) => Math.Pow(a, b);
     }
 }
