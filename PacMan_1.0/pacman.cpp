@@ -1,99 +1,118 @@
 #include <iostream>
-#include <cstdlib>
+#include <vector>
 #include <ctime>
-#include <ncurses.h>
+#include <cstdlib>
 
 using namespace std;
 
-bool gameOver;
-const int width = 20;
-const int height = 17;
-int x, y, fruitX, fruitY, score;
+const int WIDTH = 20;
+const int HEIGHT = 10;
+const char PACMAN = 'P';
+const char WALL = '#';
+const char POINT = '.';
+const char OBSTACLE = 'X';
+const char REWARD = '*';
 
-void Setup() {
-    gameOver = false;
-    x = width / 2;
-    y = height / 2;
-    fruitX = rand() % width;
-    fruitY = rand() % height;
-    score = 0;
-}
+struct Position {
+    int x, y;
+};
 
-void Draw() {
-    clear();
-    for (int i = 0; i < width + 2; i++)
-        printw("#");
-    printw("\n");
+class Game {
+private:
+    vector<vector<char>> board;
+    Position pacmanPos;
+    int score;
+    int lives;
 
-    for (int i = 0; i < height; i++) {
-        for (int j = 0; j < width; j++) {
-            if (j == 0)
-                printw("#"); // wall
-            if (i == y && j == x)
-                printw("O"); // Pacman
-            else if (i == fruitY && j == fruitX)
-                printw("F"); // fruit
-            else
-                printw(" ");
+public:
+    Game() : score(0), lives(3) {
+        board.resize(HEIGHT, vector<char>(WIDTH, ' '));
+        initBoard();
+    }
+
+    void initBoard() {
+        // Setting walls and points
+        for (int i = 0; i < HEIGHT; i++) {
+            for (int j = 0; j < WIDTH; j++) {
+                if (i == 0 || i == HEIGHT - 1 || j == 0 || j == WIDTH - 1)
+                    board[i][j] = WALL;
+                else
+                    board[i][j] = POINT;
+            }
         }
-        printw("#\n");
+
+        // Adding Pac-Man
+        pacmanPos = { WIDTH / 2, HEIGHT / 2 };
+        board[pacmanPos.y][pacmanPos.x] = PACMAN;
+
+        // Adding obstacles and rewards
+        srand(time(0));
+        for (int i = 0; i < 10; i++) {
+            int x = rand() % (WIDTH - 2) + 1;
+            int y = rand() % (HEIGHT - 2) + 1;
+            board[y][x] = (i % 2 == 0) ? OBSTACLE : REWARD;
+        }
     }
 
-    for (int i = 0; i < width + 2; i++)
-        printw("#");
-    printw("\n");
-    printw("Score: %d\n", score);
-    refresh();
-}
-
-void Input() {
-    keypad(stdscr, TRUE);
-    halfdelay(1); // Wait for 100 ms
-    int c = getch();
-    switch (c) {
-        case 'a':
-            x--;
-            break;
-        case 'd':
-            x++;
-            break;
-        case 'w':
-            y--;
-            break;
-        case 's':
-            y++;
-            break;
-        case 'x':
-            gameOver = true;
-            break;
+    void displayBoard() {
+        for (int i = 0; i < HEIGHT; i++) {
+            for (int j = 0; j < WIDTH; j++) {
+                cout << board[i][j] << ' ';
+            }
+            cout << endl;
+        }
+        cout << "Score: " << score << " | Lives: " << lives << endl;
     }
-}
 
-void Logic() {
-    // Wrap around
-    if (x >= width) x = 0; else if (x < 0) x = width - 1;
-    if (y >= height) y = 0; else if (y < 0) y = height - 1;
+    void movePacman(char direction) {
+        int newX = pacmanPos.x;
+        int newY = pacmanPos.y;
 
-    if (x == fruitX && y == fruitY) {
-        score++;
-        fruitX = rand() % width;
-        fruitY = rand() % height;
+        switch (direction) {
+            case 'w': newY--; break;
+            case 's': newY++; break;
+            case 'a': newX--; break;
+            case 'd': newX++; break;
+            default: return;
+        }
+
+        if (newX < 0 || newX >= WIDTH || newY < 0 || newY >= HEIGHT || board[newY][newX] == WALL) {
+            cout << "Bumped into a wall!" << endl;
+            return;
+        }
+
+        if (board[newY][newX] == POINT) {
+            score += 10;
+        } else if (board[newY][newX] == OBSTACLE) {
+            lives--;
+            cout << "Hit an obstacle! Lives left: " << lives << endl;
+            if (lives <= 0) {
+                cout << "Game Over!" << endl;
+                exit(0);
+            }
+        } else if (board[newY][newX] == REWARD) {
+            score += 50;
+            cout << "Found a reward!" << endl;
+        }
+
+        board[pacmanPos.y][pacmanPos.x] = ' ';
+        pacmanPos = { newX, newY };
+        board[pacmanPos.y][pacmanPos.x] = PACMAN;
     }
-}
+
+    void play() {
+        char input;
+        while (true) {
+            displayBoard();
+            cout << "Move (w/a/s/d): ";
+            cin >> input;
+            movePacman(input);
+        }
+    }
+};
 
 int main() {
-    srand(static_cast<unsigned int>(time(0))); // Seed random number generator
-    initscr(); // Start ncurses
-    noecho(); // Don't echo input
-    cbreak(); // Disable line buffering
-
-    Setup();
-    while (!gameOver) {
-        Draw();
-        Input();
-        Logic();
-    }
-
-    endwin(); // End ncurses
+    Game game;
+    game.play();
     return 0;
 }
