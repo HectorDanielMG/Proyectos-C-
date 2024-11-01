@@ -25,37 +25,6 @@ Node* insert(Node* root, int data) {
     return root;
 }
 
-Node* findMin(Node* root) {
-    while (root->left != NULL) root = root->left;
-    return root;
-}
-
-Node* deleteNode(Node* root, int data) {
-    if (root == NULL) return root;
-
-    if (data < root->data)
-        root->left = deleteNode(root->left, data);
-    else if (data > root->data)
-        root->right = deleteNode(root->right, data);
-    else {
-        if (root->left == NULL) {
-            Node* temp = root->right;
-            free(root);
-            return temp;
-        }
-        else if (root->right == NULL) {
-            Node* temp = root->left;
-            free(root);
-            return temp;
-        }
-
-        Node* temp = findMin(root->right);
-        root->data = temp->data;
-        root->right = deleteNode(root->right, temp->data);
-    }
-    return root;
-}
-
 int treeHeight(Node* root) {
     if (root == NULL) return -1;
     int leftHeight = treeHeight(root->left);
@@ -63,33 +32,47 @@ int treeHeight(Node* root) {
     return (leftHeight > rightHeight ? leftHeight : rightHeight) + 1;
 }
 
-int findMax(Node* root) {
-    while (root->right != NULL) root = root->right;
-    return root->data;
-}
-
 int countNodes(Node* root) {
     if (root == NULL) return 0;
     return 1 + countNodes(root->left) + countNodes(root->right);
 }
 
-int sumOfNodes(Node* root) {
-    if (root == NULL) return 0;
-    return root->data + sumOfNodes(root->left) + sumOfNodes(root->right);
+// Helper function to find the k-th smallest element
+void kthSmallestHelper(Node* root, int* k, int* result) {
+    if (root == NULL || *k == 0) return;
+
+    kthSmallestHelper(root->left, k, result);
+    (*k)--;
+    if (*k == 0) {
+        *result = root->data;
+        return;
+    }
+    kthSmallestHelper(root->right, k, result);
 }
 
-bool isBalanced(Node* root) {
-    if (root == NULL) return true;
+int findKthSmallest(Node* root, int k) {
+    int result = -1;
+    kthSmallestHelper(root, &k, &result);
+    return result;
+}
 
-    int leftHeight = treeHeight(root->left);
-    int rightHeight = treeHeight(root->right);
+// Calculate the depth of each node
+void calculateDepth(Node* root, int depth) {
+    if (root == NULL) return;
+    printf("Node %d is at depth %d\n", root->data, depth);
+    calculateDepth(root->left, depth + 1);
+    calculateDepth(root->right, depth + 1);
+}
 
-    if (abs(leftHeight - rightHeight) <= 1 &&
-        isBalanced(root->left) &&
-        isBalanced(root->right))
-        return true;
-
-    return false;
+// Print leaf nodes
+void printLeafNodes(Node* root) {
+    if (root == NULL) return;
+    if (root->left == NULL && root->right == NULL) {
+        printf("%d ", root->data);
+        return;
+    }
+    printLeafNodes(root->left);
+    printLeafNodes(root->right);
 }
 
 void inOrder(Node* root) {
@@ -100,31 +83,14 @@ void inOrder(Node* root) {
     }
 }
 
-void preOrder(Node* root) {
-    if (root != NULL) {
-        printf("%d ", root->data);
-        preOrder(root->left);
-        preOrder(root->right);
-    }
-}
-
-void postOrder(Node* root) {
-    if (root != NULL) {
-        postOrder(root->left);
-        postOrder(root->right);
-        printf("%d ", root->data);
-    }
-}
-
 int main() {
     Node* root = NULL;
-    int option, value;
+    int option, value, k;
 
     while (1) {
         printf("\nBinary Search Tree Operations:\n");
-        printf("1. Insert\n2. Delete\n3. Find Minimum\n4. Find Maximum\n5. Tree Height\n6. Count Nodes\n");
-        printf("7. Sum of Nodes\n8. Check if Balanced\n9. In-order Traversal\n10. Pre-order Traversal\n");
-        printf("11. Post-order Traversal\n12. Exit\nChoose an option: ");
+        printf("1. Insert\n2. Tree Height\n3. Count Nodes\n4. Find k-th Smallest\n5. Print Depths\n6. Print Leaf Nodes\n");
+        printf("7. In-order Traversal\n8. Exit\nChoose an option: ");
         scanf("%d", &option);
 
         switch (option) {
@@ -135,63 +101,41 @@ int main() {
                 break;
 
             case 2:
-                printf("Enter value to delete: ");
-                scanf("%d", &value);
-                root = deleteNode(root, value);
-                break;
-
-            case 3:
-                if (root != NULL)
-                    printf("Minimum value: %d\n", findMin(root)->data);
-                else
-                    printf("Tree is empty.\n");
-                break;
-
-            case 4:
-                if (root != NULL)
-                    printf("Maximum value: %d\n", findMax(root));
-                else
-                    printf("Tree is empty.\n");
-                break;
-
-            case 5:
                 printf("Tree height: %d\n", treeHeight(root));
                 break;
 
-            case 6:
+            case 3:
                 printf("Total nodes: %d\n", countNodes(root));
                 break;
 
-            case 7:
-                printf("Sum of all nodes: %d\n", sumOfNodes(root));
-                break;
-
-            case 8:
-                if (isBalanced(root))
-                    printf("The tree is balanced.\n");
+            case 4:
+                printf("Enter k to find k-th smallest element: ");
+                scanf("%d", &k);
+                value = findKthSmallest(root, k);
+                if (value != -1)
+                    printf("The %d-th smallest element is %d\n", k, value);
                 else
-                    printf("The tree is not balanced.\n");
+                    printf("There are less than %d elements in the tree.\n", k);
                 break;
 
-            case 9:
+            case 5:
+                printf("Depth of each node:\n");
+                calculateDepth(root, 0);
+                break;
+
+            case 6:
+                printf("Leaf nodes: ");
+                printLeafNodes(root);
+                printf("\n");
+                break;
+
+            case 7:
                 printf("In-order traversal: ");
                 inOrder(root);
                 printf("\n");
                 break;
 
-            case 10:
-                printf("Pre-order traversal: ");
-                preOrder(root);
-                printf("\n");
-                break;
-
-            case 11:
-                printf("Post-order traversal: ");
-                postOrder(root);
-                printf("\n");
-                break;
-
-            case 12:
+            case 8:
                 exit(0);
 
             default:
