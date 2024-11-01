@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <stdbool.h>
 
 typedef struct Node {
     int data;
@@ -67,11 +68,28 @@ int findMax(Node* root) {
     return root->data;
 }
 
-int findMinValue(Node* root) {
-    Node* current = root;
-    while (current && current->left != NULL)
-        current = current->left;
-    return current->data;
+int countNodes(Node* root) {
+    if (root == NULL) return 0;
+    return 1 + countNodes(root->left) + countNodes(root->right);
+}
+
+int sumOfNodes(Node* root) {
+    if (root == NULL) return 0;
+    return root->data + sumOfNodes(root->left) + sumOfNodes(root->right);
+}
+
+bool isBalanced(Node* root) {
+    if (root == NULL) return true;
+
+    int leftHeight = treeHeight(root->left);
+    int rightHeight = treeHeight(root->right);
+
+    if (abs(leftHeight - rightHeight) <= 1 &&
+        isBalanced(root->left) &&
+        isBalanced(root->right))
+        return true;
+
+    return false;
 }
 
 void inOrder(Node* root) {
@@ -104,8 +122,9 @@ int main() {
 
     while (1) {
         printf("\nBinary Search Tree Operations:\n");
-        printf("1. Insert\n2. Delete\n3. Find Minimum\n4. Find Maximum\n5. Tree Height\n6. In-order Traversal\n");
-        printf("7. Pre-order Traversal\n8. Post-order Traversal\n9. Exit\nChoose an option: ");
+        printf("1. Insert\n2. Delete\n3. Find Minimum\n4. Find Maximum\n5. Tree Height\n6. Count Nodes\n");
+        printf("7. Sum of Nodes\n8. Check if Balanced\n9. In-order Traversal\n10. Pre-order Traversal\n");
+        printf("11. Post-order Traversal\n12. Exit\nChoose an option: ");
         scanf("%d", &option);
 
         switch (option) {
@@ -123,7 +142,7 @@ int main() {
 
             case 3:
                 if (root != NULL)
-                    printf("Minimum value: %d\n", findMinValue(root));
+                    printf("Minimum value: %d\n", findMin(root)->data);
                 else
                     printf("Tree is empty.\n");
                 break;
@@ -140,24 +159,39 @@ int main() {
                 break;
 
             case 6:
+                printf("Total nodes: %d\n", countNodes(root));
+                break;
+
+            case 7:
+                printf("Sum of all nodes: %d\n", sumOfNodes(root));
+                break;
+
+            case 8:
+                if (isBalanced(root))
+                    printf("The tree is balanced.\n");
+                else
+                    printf("The tree is not balanced.\n");
+                break;
+
+            case 9:
                 printf("In-order traversal: ");
                 inOrder(root);
                 printf("\n");
                 break;
 
-            case 7:
+            case 10:
                 printf("Pre-order traversal: ");
                 preOrder(root);
                 printf("\n");
                 break;
 
-            case 8:
+            case 11:
                 printf("Post-order traversal: ");
                 postOrder(root);
                 printf("\n");
                 break;
 
-            case 9:
+            case 12:
                 exit(0);
 
             default:
