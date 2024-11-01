@@ -1,162 +1,169 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-struct Nodo {
-    int valor;
-    struct Nodo* izquierda;
-    struct Nodo* derecha;
-};
+typedef struct Node {
+    int data;
+    struct Node *left, *right;
+} Node;
 
-// Crear un nuevo nodo en el árbol
-struct Nodo* nuevoNodo(int valor) {
-    struct Nodo* nodo = (struct Nodo*)malloc(sizeof(struct Nodo));
-    nodo->valor = valor;
-    nodo->izquierda = nodo->derecha = NULL;
-    return nodo;
+Node* createNode(int data) {
+    Node* newNode = (Node*)malloc(sizeof(Node));
+    newNode->data = data;
+    newNode->left = newNode->right = NULL;
+    return newNode;
 }
 
-// Insertar un valor en el BST
-struct Nodo* insertar(struct Nodo* nodo, int valor) {
-    if (nodo == NULL) {
-        return nuevoNodo(valor);
-    }
-    if (valor < nodo->valor) {
-        nodo->izquierda = insertar(nodo->izquierda, valor);
-    } else if (valor > nodo->valor) {
-        nodo->derecha = insertar(nodo->derecha, valor);
-    }
-    return nodo;
+Node* insert(Node* root, int data) {
+    if (root == NULL) return createNode(data);
+
+    if (data < root->data)
+        root->left = insert(root->left, data);
+    else if (data > root->data)
+        root->right = insert(root->right, data);
+
+    return root;
 }
 
-// Buscar un nodo en el BST
-struct Nodo* buscar(struct Nodo* nodo, int valor) {
-    if (nodo == NULL || nodo->valor == valor) {
-        return nodo;
-    }
-    if (valor < nodo->valor) {
-        return buscar(nodo->izquierda, valor);
-    } else {
-        return buscar(nodo->derecha, valor);
-    }
+Node* findMin(Node* root) {
+    while (root->left != NULL) root = root->left;
+    return root;
 }
 
-// Encontrar el nodo con el valor mínimo (para eliminación)
-struct Nodo* minValorNodo(struct Nodo* nodo) {
-    struct Nodo* actual = nodo;
-    while (actual && actual->izquierda != NULL) {
-        actual = actual->izquierda;
-    }
-    return actual;
-}
+Node* deleteNode(Node* root, int data) {
+    if (root == NULL) return root;
 
-// Eliminar un nodo en el BST
-struct Nodo* eliminarNodo(struct Nodo* nodo, int valor) {
-    if (nodo == NULL) {
-        return nodo;
-    }
-    if (valor < nodo->valor) {
-        nodo->izquierda = eliminarNodo(nodo->izquierda, valor);
-    } else if (valor > nodo->valor) {
-        nodo->derecha = eliminarNodo(nodo->derecha, valor);
-    } else {
-        // Nodo con un solo hijo o sin hijos
-        if (nodo->izquierda == NULL) {
-            struct Nodo* temp = nodo->derecha;
-            free(nodo);
+    if (data < root->data)
+        root->left = deleteNode(root->left, data);
+    else if (data > root->data)
+        root->right = deleteNode(root->right, data);
+    else {
+        if (root->left == NULL) {
+            Node* temp = root->right;
+            free(root);
             return temp;
-        } else if (nodo->derecha == NULL) {
-            struct Nodo* temp = nodo->izquierda;
-            free(nodo);
+        }
+        else if (root->right == NULL) {
+            Node* temp = root->left;
+            free(root);
             return temp;
         }
 
-        // Nodo con dos hijos
-        struct Nodo* temp = minValorNodo(nodo->derecha);
-        nodo->valor = temp->valor;
-        nodo->derecha = eliminarNodo(nodo->derecha, temp->valor);
+        Node* temp = findMin(root->right);
+        root->data = temp->data;
+        root->right = deleteNode(root->right, temp->data);
     }
-    return nodo;
+    return root;
 }
 
-// Recorrido en orden
-void enOrden(struct Nodo* nodo) {
-    if (nodo != NULL) {
-        enOrden(nodo->izquierda);
-        printf("%d ", nodo->valor);
-        enOrden(nodo->derecha);
+int treeHeight(Node* root) {
+    if (root == NULL) return -1;
+    int leftHeight = treeHeight(root->left);
+    int rightHeight = treeHeight(root->right);
+    return (leftHeight > rightHeight ? leftHeight : rightHeight) + 1;
+}
+
+int findMax(Node* root) {
+    while (root->right != NULL) root = root->right;
+    return root->data;
+}
+
+int findMinValue(Node* root) {
+    Node* current = root;
+    while (current && current->left != NULL)
+        current = current->left;
+    return current->data;
+}
+
+void inOrder(Node* root) {
+    if (root != NULL) {
+        inOrder(root->left);
+        printf("%d ", root->data);
+        inOrder(root->right);
     }
 }
 
-// Recorrido en preorden
-void preOrden(struct Nodo* nodo) {
-    if (nodo != NULL) {
-        printf("%d ", nodo->valor);
-        preOrden(nodo->izquierda);
-        preOrden(nodo->derecha);
+void preOrder(Node* root) {
+    if (root != NULL) {
+        printf("%d ", root->data);
+        preOrder(root->left);
+        preOrder(root->right);
     }
 }
 
-// Recorrido en postorden
-void postOrden(struct Nodo* nodo) {
-    if (nodo != NULL) {
-        postOrden(nodo->izquierda);
-        postOrden(nodo->derecha);
-        printf("%d ", nodo->valor);
+void postOrder(Node* root) {
+    if (root != NULL) {
+        postOrder(root->left);
+        postOrder(root->right);
+        printf("%d ", root->data);
     }
 }
 
 int main() {
-    struct Nodo* raiz = NULL;
-    int opcion, valor;
+    Node* root = NULL;
+    int option, value;
 
-    do {
-        printf("\nOpciones:\n1. Insertar\n2. Buscar\n3. Eliminar\n4. Recorrido en orden\n5. Recorrido en preorden\n6. Recorrido en postorden\n7. Salir\nElige una opción: ");
-        scanf("%d", &opcion);
+    while (1) {
+        printf("\nBinary Search Tree Operations:\n");
+        printf("1. Insert\n2. Delete\n3. Find Minimum\n4. Find Maximum\n5. Tree Height\n6. In-order Traversal\n");
+        printf("7. Pre-order Traversal\n8. Post-order Traversal\n9. Exit\nChoose an option: ");
+        scanf("%d", &option);
 
-        switch (opcion) {
+        switch (option) {
             case 1:
-                printf("Ingresa el valor a insertar: ");
-                scanf("%d", &valor);
-                raiz = insertar(raiz, valor);
+                printf("Enter value to insert: ");
+                scanf("%d", &value);
+                root = insert(root, value);
                 break;
-            case 2:
-                printf("Ingresa el valor a buscar: ");
-                scanf("%d", &valor);
-                struct Nodo* encontrado = buscar(raiz, valor);
-                if (encontrado != NULL) {
-                    printf("Valor %d encontrado en el árbol.\n", valor);
-                } else {
-                    printf("Valor %d no encontrado en el árbol.\n", valor);
-                }
-                break;
-            case 3:
-                printf("Ingresa el valor a eliminar: ");
-                scanf("%d", &valor);
-                raiz = eliminarNodo(raiz, valor);
-                printf("Nodo eliminado (si existía).\n");
-                break;
-            case 4:
-                printf("Recorrido en orden: ");
-                enOrden(raiz);
-                printf("\n");
-                break;
-            case 5:
-                printf("Recorrido en preorden: ");
-                preOrden(raiz);
-                printf("\n");
-                break;
-            case 6:
-                printf("Recorrido en postorden: ");
-                postOrden(raiz);
-                printf("\n");
-                break;
-            case 7:
-                printf("Saliendo...\n");
-                break;
-            default:
-                printf("Opción no válida.\n");
-        }
-    } while (opcion != 7);
 
+            case 2:
+                printf("Enter value to delete: ");
+                scanf("%d", &value);
+                root = deleteNode(root, value);
+                break;
+
+            case 3:
+                if (root != NULL)
+                    printf("Minimum value: %d\n", findMinValue(root));
+                else
+                    printf("Tree is empty.\n");
+                break;
+
+            case 4:
+                if (root != NULL)
+                    printf("Maximum value: %d\n", findMax(root));
+                else
+                    printf("Tree is empty.\n");
+                break;
+
+            case 5:
+                printf("Tree height: %d\n", treeHeight(root));
+                break;
+
+            case 6:
+                printf("In-order traversal: ");
+                inOrder(root);
+                printf("\n");
+                break;
+
+            case 7:
+                printf("Pre-order traversal: ");
+                preOrder(root);
+                printf("\n");
+                break;
+
+            case 8:
+                printf("Post-order traversal: ");
+                postOrder(root);
+                printf("\n");
+                break;
+
+            case 9:
+                exit(0);
+
+            default:
+                printf("Invalid option.\n");
+                break;
+        }
+    }
     return 0;
 }
