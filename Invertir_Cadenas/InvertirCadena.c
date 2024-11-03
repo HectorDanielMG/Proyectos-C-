@@ -1,41 +1,38 @@
- #include <stdio.h>
+#include <stdio.h>
 #include <string.h>
 
-// Función para invertir la cadena usando apuntadores
-void invertirCadena(char *inicio, char *fin) {
-    char temp;
-    while (inicio < fin) {
-        // Intercambiar los valores a los que apuntan 'inicio' y 'fin'
-        temp = *inicio;
-        *inicio = *fin;
-        *fin = temp;
-
-        // Mover los apuntadores hacia el centro
-        inicio++;
-        fin--;
+void invertirCadena(char *cadena)
+{
+    int longitud = strlen(cadena);
+    for (int i = 0; i < longitud / 2; i++)
+    {
+        char temp = cadena[i];
+        cadena[i] = cadena[longitud - i - 1];
+        cadena[longitud - i - 1] = temp;
     }
 }
 
-int main() {
+void limpiarBuffer()
+{
+    int c;
+    while ((c = getchar()) != '\n' && c != EOF);
+}
+
+int main()
+{
     char cadena[100];
-
-    // Solicitar la cadena al usuario
-    printf("Ingrese una cadena de caracteres: ");
+    
+    printf("Ingrese una cadena (máximo 99 caracteres): ");
     fgets(cadena, sizeof(cadena), stdin);
+    
+    // Eliminar el salto de línea generado por fgets si existe
+    cadena[strcspn(cadena, "\n")] = '\0';
 
-    // Eliminar el salto de línea si lo hay
-    cadena[strcspn(cadena, "\n")] = 0;
+    printf("Cadena original: %s\n", cadena);
+    
+    invertirCadena(cadena);
 
-    // Puntero al inicio y fin de la cadena
-    char *inicio = cadena;
-    char *fin = cadena + strlen(cadena) - 1;
-
-    // Invertir la cadena
-    invertirCadena(inicio, fin);
-
-    // Mostrar la cadena invertida
-    printf("La cadena invertida es: %s\n", cadena);
+    printf("Cadena invertida: %s\n", cadena);
 
     return 0;
 }
-
