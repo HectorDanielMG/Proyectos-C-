@@ -2,99 +2,72 @@ using System;
 using System.Collections.Generic;
 using System.Linq;
 
-class Tarea
+class ToDoItem
 {
-    public int Id { get; set; }
-    public string Descripcion { get; set; }
-    public bool Completada { get; set; }
+    public string Description { get; set; }
+    public bool IsCompleted { get; set; }
+    public int Priority { get; set; } // Nueva propiedad para prioridad
 
-    public Tarea(int id, string descripcion)
+    public ToDoItem(string description, int priority)
     {
-        Id = id;
-        Descripcion = descripcion;
-        Completada = false;
+        Description = description;
+        IsCompleted = false;
+        Priority = priority;
     }
 
     public override string ToString()
     {
-        return $"[{(Completada ? "X" : " ")}] {Id}. {Descripcion}";
+        return $"[{(IsCompleted ? "X" : " ")}] {Description} (Prioridad: {Priority})";
     }
 }
 
 class ToDoList
 {
-    private List<Tarea> tareas;
-    private int contadorId;
+    private List<ToDoItem> items;
 
     public ToDoList()
     {
-        tareas = new List<Tarea>();
-        contadorId = 1;
+        items = new List<ToDoItem>();
     }
 
-    public void AgregarTarea(string descripcion)
+    public void AddItem(string description, int priority)
     {
-        tareas.Add(new Tarea(contadorId++, descripcion));
-        Console.WriteLine("Tarea agregada correctamente.");
+        items.Add(new ToDoItem(description, priority));
+        Console.WriteLine("Tarea añadida.");
     }
 
-    public void EditarTarea(int id, string nuevaDescripcion)
+    public void MarkAsCompleted(int index)
     {
-        var tarea = tareas.FirstOrDefault(t => t.Id == id);
-        if (tarea != null)
+        if (index < 1 || index > items.Count)
         {
-            tarea.Descripcion = nuevaDescripcion;
-            Console.WriteLine("Tarea editada correctamente.");
+            Console.WriteLine("Índice inválido.");
+            return;
         }
-        else
-        {
-            Console.WriteLine("Tarea no encontrada.");
-        }
+
+        items[index - 1].IsCompleted = true;
+        Console.WriteLine("Tarea marcada como completada.");
     }
 
-    public void MarcarComoCompletada(int id)
+    public void ListItems(bool showCompleted = true)
     {
-        var tarea = tareas.FirstOrDefault(t => t.Id == id);
-        if (tarea != null)
+        var sortedItems = items.OrderBy(item => item.Priority).ToList();
+        for (int i = 0; i < sortedItems.Count; i++)
         {
-            tarea.Completada = true;
-            Console.WriteLine("Tarea marcada como completada.");
-        }
-        else
-        {
-            Console.WriteLine("Tarea no encontrada.");
+            if (showCompleted || !sortedItems[i].IsCompleted)
+                Console.WriteLine($"{i + 1}. {sortedItems[i]}");
         }
     }
 
-    public void EliminarTarea(int id)
+    public void RemoveItem(int index)
     {
-        var tarea = tareas.FirstOrDefault(t => t.Id == id);
-        if (tarea != null)
+        if (index < 1 || index > items.Count)
         {
-            tareas.Remove(tarea);
-            Console.WriteLine("Tarea eliminada correctamente.");
+            Console.WriteLine("Índice inválido.");
+            return;
         }
-        else
-        {
-            Console.WriteLine("Tarea no encontrada.");
-        }
-    }
 
-    public void MostrarTareas(bool soloCompletadas = false, bool soloIncompletas = false)
-    {
-        Console.WriteLine("\nLista de Tareas:");
-        var tareasFiltradas = tareas;
-
-        if (soloCompletadas)
-            tareasFiltradas = tareas.Where(t => t.Completada).ToList();
-        else if (soloIncompletas)
-            tareasFiltradas = tareas.Where(t => !t.Completada).ToList();
-
-        foreach (var tarea in tareasFiltradas)
-            Console.WriteLine(tarea);
-
-        if (!tareasFiltradas.Any())
-            Console.WriteLine("No hay tareas para mostrar.");
+        items.RemoveAt(index - 1);
+        Console.WriteLine("Tarea eliminada.");
     }
 }
 
@@ -102,63 +75,73 @@ class Program
 {
     static void Main()
     {
-        ToDoList listaTareas = new ToDoList();
-        int opcion;
+        var toDoList = new ToDoList();
 
-        do
+        while (true)
         {
-            Console.WriteLine("\nOpciones:");
-            Console.WriteLine("1. Agregar tarea");
-            Console.WriteLine("2. Editar tarea");
-            Console.WriteLine("3. Marcar tarea como completada");
+            Console.WriteLine("\nSeleccione una opción:");
+            Console.WriteLine("1. Añadir tarea");
+            Console.WriteLine("2. Marcar tarea como completada");
+            Console.WriteLine("3. Ver tareas");
             Console.WriteLine("4. Eliminar tarea");
-            Console.WriteLine("5. Mostrar todas las tareas");
-            Console.WriteLine("6. Mostrar solo tareas completadas");
-            Console.WriteLine("7. Mostrar solo tareas incompletas");
-            Console.WriteLine("8. Salir");
-            Console.Write("Elige una opción: ");
-            opcion = Convert.ToInt32(Console.ReadLine());
+            Console.WriteLine("5. Salir");
 
-            switch (opcion)
+            var input = Console.ReadLine();
+
+            switch (input)
             {
-                case 1:
+                case "1":
                     Console.Write("Descripción de la tarea: ");
-                    string descripcion = Console.ReadLine();
-                    listaTareas.AgregarTarea(descripcion);
+                    var description = Console.ReadLine();
+                    Console.Write("Prioridad de la tarea (1-5): ");
+                    if (int.TryParse(Console.ReadLine(), out int priority) && priority >= 1 && priority <= 5)
+                    {
+                        toDoList.AddItem(description, priority);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Prioridad inválida.");
+                    }
                     break;
-                case 2:
-                    Console.Write("ID de la tarea a editar: ");
-                    int idEditar = Convert.ToInt32(Console.ReadLine());
-                    Console.Write("Nueva descripción de la tarea: ");
-                    string nuevaDescripcion = Console.ReadLine();
-                    listaTareas.EditarTarea(idEditar, nuevaDescripcion);
+
+                case "2":
+                    Console.Write("Número de tarea a marcar como completada: ");
+                    if (int.TryParse(Console.ReadLine(), out int index1))
+                    {
+                        toDoList.MarkAsCompleted(index1);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Entrada inválida.");
+                    }
                     break;
-                case 3:
-                    Console.Write("ID de la tarea a marcar como completada: ");
-                    int idCompletar = Convert.ToInt32(Console.ReadLine());
-                    listaTareas.MarcarComoCompletada(idCompletar);
+
+                case "3":
+                    Console.WriteLine("¿Mostrar tareas completadas? (s/n): ");
+                    bool showCompleted = Console.ReadLine()?.ToLower() == "s";
+                    toDoList.ListItems(showCompleted);
                     break;
-                case 4:
-                    Console.Write("ID de la tarea a eliminar: ");
-                    int idEliminar = Convert.ToInt32(Console.ReadLine());
-                    listaTareas.EliminarTarea(idEliminar);
+
+                case "4":
+                    Console.Write("Número de tarea a eliminar: ");
+                    if (int.TryParse(Console.ReadLine(), out int index2))
+                    {
+                        toDoList.RemoveItem(index2);
+                    }
+                    else
+                    {
+                        Console.WriteLine("Entrada inválida.");
+                    }
                     break;
-                case 5:
-                    listaTareas.MostrarTareas();
-                    break;
-                case 6:
-                    listaTareas.MostrarTareas(soloCompletadas: true);
-                    break;
-                case 7:
-                    listaTareas.MostrarTareas(soloIncompletas: true);
-                    break;
-                case 8:
-                    Console.WriteLine("Saliendo...");
-                    break;
+
+                case "5":
+                    Console.WriteLine("Saliendo de la aplicación.");
+                    return;
+
                 default:
-                    Console.WriteLine("Opción no válida.");
+                    Console.WriteLine("Opción inválida.");
                     break;
             }
-        } while (opcion != 8);
+        }
     }
 }
