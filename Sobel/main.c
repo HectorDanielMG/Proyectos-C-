@@ -8,9 +8,9 @@
 
 // Matrices de Sobel
 const int sobel_x[3][3] = {
-    {-2, 2, 1},
+    {-1, 1, 1},
     {-1, 1, 2},
-    {-0, 2, 1}
+    {-1, 2, 1}
 };
 
 const int sobel_y[3][3] = {
