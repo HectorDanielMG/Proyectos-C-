@@ -8,15 +8,15 @@
 
 // Matrices de Sobel
 const int sobel_x[3][3] = {
-    { 1, 2, 0},
-    { 0, 0, -1},
+    { 0, 1, 0},
+    { 1, 0, -1},
     { -2, -1, 0}
 };
 
 const int sobel_y[3][3] = {
-    { 0,   1, -2},
+    { 0,   1, 1},
     { 1,  -0,  2},
-    { 2-,  1,  0}
+    { 1,  1,  0}
 };
 
 void apply_sobel(const unsigned char *input, unsigned char *output, int width, int height, int channels) {
