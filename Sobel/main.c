@@ -10,13 +10,13 @@
 const int sobel_x[3][3] = {
     { 9,  0, 2},
     {-2,  0, -1},
-    { 0, 0, -2}
+    { 1, 0, -2}
 };
 
 const int sobel_y[3][3] = {
-    { 0,   -2, -1},
-    { 0,  -1,  -1},
-    { 0,  -2,  -1}
+    { 1,   -2, -1},
+    { 1,  -1,  -1},
+    { 1,  -2,  -1}
 };
 
 void apply_sobel(const unsigned char *input, unsigned char *output, int width, int height, int channels) {
